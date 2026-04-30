@@ -8,30 +8,31 @@ import {
   User as UserIcon,
   Bell,
   Search,
-  Plus
+  LogOut
 } from 'lucide-react';
-import { CURRENT_USER, Screen } from '../types';
+import { User, Screen } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
   activeScreen: Screen;
   onScreenChange: (screen: Screen) => void;
+  user: User;
+  onLogout: () => void;
 }
 
-export default function Layout({ children, activeScreen, onScreenChange }: LayoutProps) {
+export default function Layout({ children, activeScreen, onScreenChange, user, onLogout }: LayoutProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'team', label: 'Team', icon: Users },
-    { id: 'profile', label: 'Profile', icon: UserIcon },
   ];
 
   return (
     <div className="min-h-screen bg-surface flex flex-col md:flex-row font-sans">
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex flex-col w-64 border-r border-outline bg-white sticky top-0 h-screen">
-        <div className="p-6 flex items-center gap-3">
+        <div className="p-6 flex items-center gap-3 cursor-pointer" onClick={() => onScreenChange('dashboard')}>
           <div className="bg-primary p-2 rounded-xl shadow-lg shadow-primary/20">
             <CheckSquare className="w-5 h-5 text-white" />
           </div>
@@ -57,20 +58,27 @@ export default function Layout({ children, activeScreen, onScreenChange }: Layou
           ))}
         </nav>
 
-        <div className="p-4 mt-auto border-t border-outline">
-          <button className="w-full flex items-center gap-3 p-3 rounded-xl border border-outline bg-surface hover:bg-white hover:shadow-sm transition-all group">
+        <div className="p-4 mt-auto border-t border-outline space-y-2">
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-outline bg-surface">
             <div className="relative">
               <img 
-                src={CURRENT_USER.avatar} 
-                alt={CURRENT_USER.name} 
-                className="w-9 h-9 rounded-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
+                alt={user.name} 
+                className="w-9 h-9 rounded-full object-cover"
               />
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-white"></span>
             </div>
             <div className="flex flex-col min-w-0 text-left">
-              <span className="font-bold text-xs text-on-surface truncate">{CURRENT_USER.name}</span>
-              <span className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant truncate">{CURRENT_USER.role}</span>
+              <span className="font-bold text-xs text-on-surface truncate">{user.name}</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-on-surface-variant truncate">{user.role}</span>
             </div>
+          </div>
+          <button 
+            onClick={onLogout}
+            className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-error/60 hover:text-error hover:bg-error/5 rounded-lg transition-all"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
           </button>
         </div>
       </aside>
@@ -90,7 +98,7 @@ export default function Layout({ children, activeScreen, onScreenChange }: Layou
             <Search className="w-4 h-4 text-on-surface-variant group-focus-within:text-primary" />
             <input 
               type="text" 
-              placeholder="Command + K to search..." 
+              placeholder="Search tasks, projects..." 
               className="bg-transparent border-none text-[11px] font-bold uppercase tracking-wider focus:ring-0 w-full placeholder:text-on-surface-variant/60"
             />
           </div>
@@ -102,14 +110,11 @@ export default function Layout({ children, activeScreen, onScreenChange }: Layou
             </button>
             <div className="h-6 w-[1px] bg-outline mx-1 hidden md:block"></div>
             <button 
-              onClick={() => onScreenChange('profile')}
-              className="p-0.5 rounded-full border border-outline hover:border-primary transition-all hidden md:block overflow-hidden"
+              onClick={onLogout}
+              className="p-2 rounded-lg text-on-surface-variant hover:text-error transition-all hidden md:block"
+              title="Logout"
             >
-              <img 
-                src={CURRENT_USER.avatar} 
-                alt="Account" 
-                className="w-8 h-8 rounded-full object-cover"
-              />
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </header>
@@ -132,7 +137,7 @@ export default function Layout({ children, activeScreen, onScreenChange }: Layou
 
       {/* Floating Bottom Nav (Mobile) */}
       <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] bg-on-surface text-white rounded-2xl h-16 flex justify-around items-center z-50 shadow-2xl px-4">
-        {navItems.filter(i => i.id !== 'profile').map((item) => (
+        {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onScreenChange(item.id as Screen)}
@@ -144,6 +149,10 @@ export default function Layout({ children, activeScreen, onScreenChange }: Layou
             <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
           </button>
         ))}
+        <button onClick={onLogout} className="text-white/40">
+          <LogOut className="w-5 h-5" />
+          <span className="text-[10px] font-bold uppercase tracking-widest">Exit</span>
+        </button>
       </nav>
     </div>
   );

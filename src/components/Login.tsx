@@ -1,30 +1,45 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   CheckSquare, 
   Mail, 
   Lock, 
   ArrowRight,
-  Building2,
+  User as UserIcon,
   AlertCircle
 } from 'lucide-react';
+import { api } from '../api';
+import { User } from '../types';
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: (token: string, user: User) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<'Admin' | 'Member'>('Member');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+    
+    try {
+      const endpoint = isLogin ? '/auth/login' : '/auth/signup';
+      const payload = isLogin ? { email, password } : { name, email, password, role };
+      
+      const data = await api.post(endpoint, payload);
+      onLogin(data.token, data.user);
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed. Please check your credentials.');
+    } finally {
       setLoading(false);
-      onLogin();
-    }, 1000);
+    }
   };
 
   return (
@@ -62,7 +77,6 @@ export default function Login({ onLogin }: LoginProps) {
           </div>
         </div>
 
-        {/* Decorative elements */}
         <div className="absolute top-20 -right-20 w-96 h-96 bg-primary/20 blur-[120px] rounded-full"></div>
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-primary/10 blur-[100px] rounded-full"></div>
       </div>
@@ -77,12 +91,47 @@ export default function Login({ onLogin }: LoginProps) {
               </div>
               <span className="text-lg font-bold tracking-tight">TaskFlow</span>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight text-on-surface">Welcome back</h2>
-            <p className="text-on-surface-variant font-medium text-sm">Enter your credentials to access your workspace.</p>
+            <h2 className="text-3xl font-bold tracking-tight text-on-surface">
+              {isLogin ? 'Welcome back' : 'Create account'}
+            </h2>
+            <p className="text-on-surface-variant font-medium text-sm">
+              {isLogin ? 'Enter your credentials to access your workspace.' : 'Join your team and start managing tasks efficiently.'}
+            </p>
           </header>
+
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-error/10 border border-error/20 p-4 rounded-xl flex items-start gap-3"
+              >
+                <AlertCircle className="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-error font-medium">{error}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-5">
+              {!isLogin && (
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Full Name</label>
+                  <div className="relative group focus-within:ring-2 focus-within:ring-primary/10 rounded-xl transition-all">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant transition-colors group-focus-within:text-primary" />
+                    <input
+                      required
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="John Doe"
+                      className="w-full pl-11 pr-4 py-3.5 bg-white border border-outline rounded-xl focus:border-primary transition-all text-sm font-medium placeholder:text-on-surface-variant/40 outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Work Email</label>
                 <div className="relative group focus-within:ring-2 focus-within:ring-primary/10 rounded-xl transition-all">
@@ -101,7 +150,7 @@ export default function Login({ onLogin }: LoginProps) {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between ml-1">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Password</label>
-                  <button type="button" className="text-[10px] font-bold text-primary hover:underline">Forgot?</button>
+                  {isLogin && <button type="button" className="text-[10px] font-bold text-primary hover:underline">Forgot?</button>}
                 </div>
                 <div className="relative group focus-within:ring-2 focus-within:ring-primary/10 rounded-xl transition-all">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant transition-colors group-focus-within:text-primary" />
@@ -115,6 +164,20 @@ export default function Login({ onLogin }: LoginProps) {
                   />
                 </div>
               </div>
+
+              {!isLogin && (
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Role</label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as any)}
+                    className="w-full px-4 py-3.5 bg-white border border-outline rounded-xl focus:border-primary transition-all text-sm font-medium outline-none"
+                  >
+                    <option value="Member">Member</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             <button
@@ -122,7 +185,7 @@ export default function Login({ onLogin }: LoginProps) {
               disabled={loading}
               className="w-full bg-primary text-white py-4 rounded-xl font-bold text-sm shadow-xl shadow-primary/20 hover:shadow-2xl hover:bg-primary-container transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {loading ? 'Authenticating...' : 'Access Workspace'}
+              {loading ? 'Processing...' : (isLogin ? 'Access Workspace' : 'Create Account')}
               {!loading && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
@@ -137,7 +200,13 @@ export default function Login({ onLogin }: LoginProps) {
           </div>
 
           <p className="text-center text-xs text-on-surface-variant font-medium">
-            New to TaskFlow? <button className="text-primary font-bold hover:underline">Create an organization</button>
+            {isLogin ? "New to TaskFlow?" : "Already have an account?"}{' '}
+            <button 
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-primary font-bold hover:underline"
+            >
+              {isLogin ? 'Create an organization' : 'Sign in instead'}
+            </button>
           </p>
         </div>
       </div>
