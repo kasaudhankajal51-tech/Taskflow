@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Industrial Color Scale */
+  --color-primary: #4f46e5;
+  --color-primary-soft: #eef2ff;
+  --color-primary-container: #4338ca;
+  
+  --color-surface: #ffffff;
+  --color-surface-low: #f8fafc;
+  --color-surface-high: #f1f5f9;
+  --color-surface-container: #ffffff;
+  
+  --color-ink: #0f1115;
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #64748b;
+  
+  --color-outline: #e2e8f0;
+  --color-outline-variant: #cbd5e1;
+  
+  --color-error: #ef4444;
+  --color-error-soft: #fef2f2;
+  --color-success: #10b981;
+  --color-success-soft: #ecfdf5;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface antialiased selection:bg-primary/10 selection:text-primary;
+    font-family: var(--font-sans);
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-2xl border-b border-outline;
+  }
+  .card-industrial {
+    @apply bg-white border border-outline rounded-xl transition-all duration-300 hover:border-primary/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+  }
+  .grid-pattern {
+    background-image: radial-gradient(var(--color-outline) 0.5px, transparent 0.5px);
+    background-size: 24px 24px;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .industrial-header {
+    @apply text-sm font-bold uppercase tracking-[0.2em] text-on-surface-variant flex items-center gap-3;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
